@@ -1,1 +1,223 @@
-11
+<% @Language = "VBScript" %>
+<% Response.buffer = true %>
+
+<html>
+
+<%
+Dim oFS,oFSPath
+Dim servername,serverinst, path
+Dim oDefSite,sDefDoc,sSitePath,sDocName
+Dim aDefDoc
+Dim success
+Dim infoobj, administ
+Dim bind,binditems,port,adminURL
+
+adminURL = ""
+success = false
+
+Set infoobj=GetObject("IIS://localhost/w3svc/info")
+Set administ= GetObject("IIS://localhost/w3svc/" & infoobj.AdminServer)	
+bind = administ.ServerBindings(0)(0)
+binditems = split(bind,":")
+port= binditems(1)
+adminURL = "http://localhost:" & port & "/"
+
+
+Set oFS=CreateObject("Scripting.FileSystemObject")
+
+servername=Request.ServerVariables("SERVER_NAME")
+serverinst=Request.ServerVariables("INSTANCE_ID")
+
+path = "IIS://" & servername & "/W3SVC/" & serverinst
+Set oDefSite = GetObject(path)
+
+thisURL = oDefSite.ADsPath & "/Root" & Request.ServerVariables("URL")
+if instr(thisURL,"localstart.asp") > 0 then
+	thisURL =  Mid(thisURL,1,instr(thisURL,"localstart.asp")-2)
+end if
+Set oDefSiteRoot = GetObject(thisURL)
+'Get the default document for this site...
+sDefDoc = oDefSite.DefaultDoc
+sSitePath = oDefSiteRoot.Path
+
+'parse through the default document string
+aDefDocs = split(sDefDoc,",")
+
+'and make sure at least one of them is valid
+for each sDocName in aDefDocs
+	if oFS.FileExists(sSitePath & "\" & sDocName) then
+		if InStr(sDocName,"iisstart") = 0 then
+			success = True
+			exit for
+		end if
+	end if
+next
+%>
+
+
+
+
+
+<head>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=gb2312">
+<META NAME="MS.LOCALE" CONTENT="ZH-CN">
+<title>欢迎使用 Windows 2000 Internet 服务</title>
+<style>
+	ul{margin-left: 15px;}
+	.clsHeading {font-family: 宋体; color: black; font-size: 12; font-weight: 800; width:210;}	
+	.clsEntryText {font-family: 宋体; color: black; font-size: 12; font-weight: 400; background-color:#FFFFFF;}		
+	.clsWarningText {font-family: 宋体; color: #B80A2D; font-size: 12; font-weight: 600; width:550;  background-color:#EFE7EA;}	
+	.clsCopy {font-family: 宋体; color: black; font-size: 12; font-weight: 400;  background-color:#FFFFFF;}	
+	
+</style>
+</head>
+
+<body TOPMARGIN="3" LEFTMARGIN="3" MARGINHEIGHT="0" MARGINWIDTH="0" BGCOLOR="#FFFFFF"
+LINK="#000066" VLINK="#000000" ALINK="#0000FF" TEXT="#000000">
+<!-- BEGIN MAIN DOCUMENT BODY --->
+
+<img src="win2000.gif" vspace="0" hspace="0"> 
+<table WIDTH="500" CELLPADDING="5" CELLSPACING="3" BORDER="0">
+<% if not success and err = 0 then %>
+  <tr>
+    <td CLASS="clsWarningText" colspan="2">
+
+	<img SRC="warning.gif" WIDTH="40" HEIGHT="40"
+    BORDER="0" ALIGN="LEFT" vspace="0" hspace="0"> <strong>您目前为用户设置了默认文档。
+<a
+    href="<%= "iisstart.asp?uc=1" %>">“正”</a>。</strong>
+
+	</td>
+  </tr>
+<% end if %>
+  <tr>
+	<td>
+	<table CELLPADDING="3" CELLSPACING="3" border=0 >
+	<tr>
+		<td valign="top" rowspan=3>
+			<IMG SRC="web.gif">
+		</td>	
+		<td valign="top" rowspan=3>
+	<span CLASS="clsHeading">
+	欢迎使用 IIS 5.0</span><br>
+    	<span CLASS="clsEntryText">		
+	Microsoft Windows 2000 的 Internet 信息服务 (IIS) 
+	 给 Windows 带来 Web 计算的强大功能。 
+	通过 IIS，您可以轻松地共享文件和打印 
+	并为安全发布信息创建应用程序来改善您的工作。 
+	IIS 是创建和开发电子商务业解决方案的安全平台。 
+	IIS 也会可以轻松地将任务准则应用程序带给 Web。
+	<P>
+	含 IIS 的 Windows 2000 可以满足您以下的需要:</span>
+	<p>
+	<ul class="clsEntryText">
+	<li>设置个人 Web 服务器。
+	<li>在您的组内共享信息。
+	<li>访问数据库。
+	<li>创建一个企业 Intranet。
+	</ul>
+	<p>
+	<span CLASS="clsEntryText">
+	由于 IIS 的集成是基于 Windows 的 Internet 标准，因此使用 Web 不需要重新学习发布，管理或开发。 
+	<P>
+	含有 Internet 信息服务的 Windows 2000 是在 Web 上共享信息并运行强大的应用程序的最简单的方法。
+	</span>
+	</td>
+
+		<td valign="top">
+			<IMG SRC="mmc.gif">
+		</td>
+		<td valign="top">
+			<span CLASS="clsHeading">集成的管理</span>
+			<br>
+<span CLASS="clsEntryText">
+				您可以通过 Windows 2000 计算机管理<a href="javascript:activate();">控制台</a>，或通过脚本来管理 IIS。假如您已经安装了 Windows 2000 服务器或 Windows 2000 高级服务器, 
+			<% if port <> "" then %><A HREF="<%=adminURL%>">管理 Web 站点</A><% else %>管理 Web 站点<% end if %> 也可以用来管理 IIS。
+			<p>
+			如配置多数常用的 IIS 设置一样，您也可以在目录上单击右键，
+			并可以通过 Web 共享其内容。 
+			</span>
+		</td>
+	</tr>
+	<tr>
+		<td valign="top">
+			<IMG SRC="help.gif">
+		</td>
+		<td valign="top">
+			<span CLASS="clsHeading"><a href="javascript:loadHelpFront();">联机文档</a></span>
+			<br>
+			<span CLASS="clsEntryText">得奖的 IIS 的联机文档包含索引，
+ 			完整文字搜索，和按节点或单个的主题打印:<p>
+			</span>
+			<ul class="clsEntryText">
+ 		 		<li>获得工作帮助。
+ 				<li>学习服务器操作。
+				<li>参阅参考资料。
+		 		<li>查看代码示例。
+			</ul>
+
+		</td>
+	</tr>
+<%
+
+		Dim WshShell, ver
+		Set WshShell = Server.CreateObject("Wscript.Shell")
+		On Error Resume Next
+		ver = 0
+		ver = WshShell.RegRead("HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Printers\DisableWebPrinting")
+		
+%>
+
+<% If ver <> 1 or err <> 0 Then %>
+	<tr>
+		<td valign="top">
+			<IMG SRC="print.gif">
+		</td>
+		<td valign="top">
+			<span CLASS="clsHeading">Web 打印</span>
+			<br>
+			<span CLASS="clsEntryText">Windows 2000 在一个易于访问的<a HREF="/printers" target="_new"> Web 站点</a>上动态地列出您的服务器上的所有打印机。您可以浏览该站点监视打印机及其工作情况。您也可以从任何 Windows 计算机通过此站点连接到打印机。
+			</span>
+		</td>
+	</tr>
+<% end if %>
+<% err.clear %> 
+	</table>
+</td>
+</tr>
+</table>
+
+<P align=center><EM><A href="/iishelp/common/colegal.htm">(C)1997-1999 Microsoft 公司。保留所有权力。</A></EM></P></FONT></BODY>
+
+<script LANGUAGE="javascript">
+	var gWinheight
+	var gDialogsize
+	var ghelpwin;
+	//launch help
+	window.moveTo(5,5);
+	gWinheight= 480;
+	gDialogsize= "width=640,height=480,left=300,top=50,"
+	if (window.screen.height > 600)
+	{
+<% if not success and err = 0 then %>
+		gWinheight= 700;
+<% else %>
+		gWinheight= 700;
+<% end if %>
+		gDialogsize= "width=640,height=480,left=500,top=50"
+	}
+	
+	window.resizeTo(600,gWinheight)
+	loadHelpFront();
+
+function loadHelpFront(){
+	ghelpwin = window.open("http://localhost/iishelp/","Help","status=yes,toolbar=yes,menubar=yes,location=yes,resizable=yes,"+gDialogsize,true);	
+}
+
+function activate(){
+	window.open("http://localhost/iishelp/iis/htm/core/iisnapin.htm", "SnapIn", 'toolbar=no, left=200, top=200, scrollbars=no, resizeable=no,  width=350, height=350');
+}
+</script>
+
+</html>
+
